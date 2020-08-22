@@ -1,9 +1,7 @@
 puzzle=[((21, None), (None, None), 6), ((None, 8), (None, 21), 3), ((8, None), (21, None), 1), ((None, None), (None, 8), 2), ((None, 21), (None, None), 5), ((None, None), (8, None), 4)]
 
-import numpy as np
-def puzzle_solver(keys, width, height):
-    pieces = keys
-    answer=[]
+from numpy import empty, vectorize
+def puzzle_solver(pieces, width, height):
     canvas = empty((height, width), dtype=tuple)
     canvas[0,0] = pieces.index(lambda x: x[0]==(None, None) and x[1][0]==None)
     pieces.remove(canvas[0,0])

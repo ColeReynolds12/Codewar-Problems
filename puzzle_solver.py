@@ -1,81 +1,69 @@
-puzzle=[((21, None), (None, None), 6), ((None, 8), (None, 21), 3), ((8, None), (21, None), 1), ((None, None), (None, 8), 2), ((None, 21), (None, None), 5), ((None, None), (8, None), 4)]
-
 from numpy import empty, vectorize
-def puzzle_solver(pieces, width, height):
-    canvas = empty((height, width), dtype=tuple)
-    canvas[0,0] = pieces.index(lambda x: x[0]==(None, None) and x[1][0]==None)
-    pieces.remove(canvas[0,0])
-    for x in list(range(width-1)):
-        canvas[0,x+1]=next(filter(lambda z: z[0][0]==canvas[0,x][0][1] and z[1][0]==canvas[0,x][1][1], pieces))
-        pieces.remove(canvas[0,x+1])
-        for y in list(range(height-1)):
-            canvas[y+1,x]=next(filter(lambda z: z[0]==canvas[y,x][1], pieces))
-            pieces.remove(canvas[y+1,x])
-    for y in list(range(height-1)):
-        canvas[y+1,width-1]=next(filter(lambda z: z[0]==canvas[y,width-1][1], pieces))
-        pieces.remove(canvas[y+1,width-1])
-    solution = vectorize(lambda t: t[2])
-    return list(map(tuple, solution(canvas)))
 
-# Algorithm 2
-def puzzle_solvernp(pieces, width, height):
-    canvas = empty((height, width), dtype=tuple)
-    edgeLayer = list(filter(lambda z: None in z[0] or None in z[1], pieces))
-    bodyLayer = list(filter(lambda z: z not in edgeLayer, pieces))
+class Puzzle_solver:
+    def __init__(self, pieces, width, height):
+        self.height = height
+        self.width = width
+        self.pieces = pieces
+        self.canvas = empty((height, width), dtype=tuple)
+        self.edgeLayer = list(filter(lambda z: None in z[0] or None in z[1], pieces))
+        self.bodyLayer = list(filter(lambda z: z not in self.edgeLayer, pieces))
+        self.leftLayer = list(filter(lambda z: z[0][0]==z[1][0]==None, self.edgeLayer))
+        self.rightLayer = list(filter(lambda z: z[0][1]==z[1][1]==None, self.edgeLayer))
+        self.topLayerUnsorted = list(filter(lambda z: z[0]==(None, None), self.edgeLayer))
+        self.bottomLayerUnsorted = list(filter(lambda z: z[1]==(None, None), self.edgeLayer))
     
-    leftLayer = list(filter(lambda z: z[0][0]==z[1][0]==None, edgeLayer))
-    rightLayer = list(filter(lambda z: z[0][1]==z[1][1]==None, edgeLayer))
-    topLayerUnsorted = list(filter(lambda z: z[0]==(None, None), edgeLayer))
-    bottomLayerUnsorted = list(filter(lambda z: z[1]==(None, None), edgeLayer))
+    def makeCanvasBorder(self):
+        self.canvas[0,0] = next(filter(lambda z: z in self.leftLayer, self.topLayerUnsorted))
+        self.canvas[self.height-1,0]= next(filter(lambda z: z in self.leftLayer, self.bottomLayerUnsorted))
+        for x in list(range(self.width-1)):
+            self.canvas[0,x+1]=next(filter(lambda z: z[0][0]==self.canvas[0,x][0][1] and z[1][0]==self.canvas[0,x][1][1], self.topLayerUnsorted))
+            self.canvas[self.height-1,x+1]=next(filter(lambda z: z[0][0]==self.canvas[self.height-1,x][0][1] and z[1][0]==self.canvas[self.height-1,x][1][1], self.bottomLayerUnsorted))
+        for y in list(range(self.height-2)):
+            self.canvas[y+1,0]=next(filter(lambda z: z[0]==self.canvas[y,0][1], self.leftLayer))
+            self.canvas[y+1,self.width-1]=next(filter(lambda z: z[0]==self.canvas[y,self.width-1][1], self.rightLayer))
     
-    canvas[0,0] = next(filter(lambda z: z in leftLayer, topLayerUnsorted))
-    canvas[height-1,0]= next(filter(lambda z: z in leftLayer, bottomLayerUnsorted))
-    for x in list(range(width-1)):
-        canvas[0,x+1]=next(filter(lambda z: z[0][0]==canvas[0,x][0][1] and z[1][0]==canvas[0,x][1][1], topLayerUnsorted))
-        canvas[height-1,x+1]=next(filter(lambda z: z[0][0]==canvas[height-1,x][0][1] and z[1][0]==canvas[height-1,x][1][1], bottomLayerUnsorted))
-    for y in list(range(height-2)):
-        canvas[y+1,0]=next(filter(lambda z: z[0]==canvas[y,0][1], leftLayer))
-        canvas[y+1,width-1]=next(filter(lambda z: z[0]==canvas[y,width-1][1], rightLayer))
-    
-    def algorithm(piece):
-    #This def here draconic
-        for x in canvas[y_top, x_min+1:x_max]:
+    def algorithm(self, piece):
+        for x in self.canvas[self.y_top, self.x_min+1:self.x_max]:
             if piece[0]==x[1]:
-                canvas[y_top+1, list(canvas[y_top]).index(x)]=piece
-                bodyLayer.remove(piece)
+                self.canvas[self.y_top+1, list(self.canvas[self.y_top]).index(x)]=piece
+                self.bodyLayer.remove(piece)
                 return
                 
-        for x in canvas[y_bottom, x_min+1:x_max]:
+        for x in self.canvas[self.y_bottom, self.x_min+1:self.x_max]:
             if piece[1]==x[0]:
-                canvas[y_bottom-1, list(canvas[y_bottom]).index(x)]=piece
-                bodyLayer.remove(piece)
+                self.canvas[self.y_bottom-1, list(self.canvas[self.y_bottom]).index(x)]=piece
+                self.bodyLayer.remove(piece)
                 return
                 
-        for y in canvas[y_top+1:y_bottom, x_min]:
+        for y in self.canvas[self.y_top+1:self.y_bottom, self.x_min]:
             if piece[0][0]==y[0][1] and piece[1][0] == y[1][1]:
-                canvas[list(canvas[:,x_min]).index(y), x_min+1]=piece
-                bodyLayer.remove(piece)
+                self.canvas[list(self.canvas[:,self.x_min]).index(y), self.x_min+1]=piece
+                self.bodyLayer.remove(piece)
                 return
                 
-        for y in canvas[y_top+1:y_bottom, x_max]:
+        for y in self.canvas[self.y_top+1:self.y_bottom, self.x_max]:
             if piece[0][1]==y[0][0] and piece[1][1] == y[1][0]:
-                canvas[list(canvas[:,x_max]).index(y), x_max-1]=piece
-                bodyLayer.remove(piece)
+                self.canvas[list(self.canvas[:,self.x_max]).index(y), self.x_max-1]=piece
+                self.bodyLayer.remove(piece)
                 return
-                
-    x_max, x_min, y_top, y_bottom = width-1, 0, 0, height-1
-    a, b = width-4, height-4 
-    while a>0 and b>0:
-        while len(bodyLayer)>a*b:
-            for piece in bodyLayer:
-                algorithm(piece)
-        a-=2
-        b-=2
-        x_max-=1
-        x_min+=1
-        y_top+=1
-        y_bottom-=1
-
     
-    solution = vectorize(lambda t: t[2])
-    return list(map(tuple, solution(canvas)))
+    def recursion(self):
+        self.x_max, self.x_min, self.y_top, self.y_bottom = self.width-1, 0, 0, self.height-1
+        a, b = self.width-4, self.height-4 
+        while a>0 and b>0:
+            while len(self.bodyLayer)>a*b:
+                for piece in self.bodyLayer:
+                    self.algorithm(piece)
+        for piece in self.bodyLayer:
+            self.algorithm(piece)
+        return self.canvas
+            
+if __name__ == "__main__":
+    puzzle = [((None, 5), (None, None), 3), ((17, None), (None, None), 9), ((None, 4), (None, 5), 8)    ,
+          ((4, 11), (5, 17), 5),        ((11, None), (17, None), 2),   ((None, None), (None, 4), 7) ,
+          ((5, 17), (None, None), 1), ((None, None), (11, None), 4), ((None, None), (4, 11), 6)     ]
+    x = Puzzle_solver(puzzle, 3, 3)
+    x.makeCanvasBorder()
+    x.recursion()
+    print(x.recursion())

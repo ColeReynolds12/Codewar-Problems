@@ -1,5 +1,6 @@
-from numpy import empty, vectorize
+#https://www.codewars.com/kata/5ef2bc554a7606002a366006
 
+from numpy import empty, vectorize
 class Puzzle_solver:
     def __init__(self, pieces, width, height):
         self.height = height

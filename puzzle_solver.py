@@ -18,7 +18,6 @@ def puzzle_solver(pieces, width, height):
     return list(map(tuple, solution(canvas)))
 
 # Algorithm 2
-from numpy import empty, vectorize
 def puzzle_solvernp(pieces, width, height):
     canvas = empty((height, width), dtype=tuple)
     edgeLayer = list(filter(lambda z: None in z[0] or None in z[1], pieces))
